@@ -1,6 +1,132 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.0;
+pragma experimental ABIEncoderV2;
+
+
+
+
+/// @title All shared constants for the Notional system should be declared here.
+library Constants {
+    // Token precision used for all internal balances, TokenHandler library ensures that we
+    // limit the dust amount caused by precision mismatches
+    int256 internal constant INTERNAL_TOKEN_PRECISION = 1e8;
+
+    // ETH will be initialized as the first currency
+    uint256 internal constant ETH_CURRENCY_ID = 1;
+    int256 internal constant ETH_DECIMAL_PLACES = 18;
+    int256 internal constant ETH_DECIMALS = 1e18;
+
+    // Used to when calculating the amount to deleverage of a market when minting nTokens
+    uint256 internal constant DELEVERAGE_BUFFER = 30000000; // 300 * Constants.BASIS_POINT
+
+    // Address of the reserve account
+    address internal constant RESERVE = address(0);
+    // NOTE: this address is hardcoded in the library, must update this on deployment
+    address constant NOTE_TOKEN_ADDRESS = 0xCFEAead4947f0705A14ec42aC3D44129E1Ef3eD5;
+
+    // Most significant bit
+    bytes32 internal constant MSB =
+        0x8000000000000000000000000000000000000000000000000000000000000000;
+
+    // Basis for percentages
+    int256 internal constant PERCENTAGE_DECIMALS = 100;
+    // Max number of traded markets, also used as the maximum number of assets in a portfolio array
+    uint256 internal constant MAX_TRADED_MARKET_INDEX = 7;
+    // Max number of fCash assets in a bitmap, this is based on the gas costs of calculating free collateral
+    // for a bitmap portfolio
+    uint256 internal constant MAX_BITMAP_ASSETS = 20;
+
+    // Internal date representations, note we use a 6/30/360 week/month/year convention here
+    uint256 internal constant DAY = 86400;
+    // We use six day weeks to ensure that all time references divide evenly
+    uint256 internal constant WEEK = DAY * 6;
+    uint256 internal constant MONTH = DAY * 30;
+    uint256 internal constant QUARTER = DAY * 90;
+    uint256 internal constant YEAR = QUARTER * 4;
+
+    // Offsets for each time chunk denominated in days
+    uint256 internal constant MAX_DAY_OFFSET = 90;
+    uint256 internal constant MAX_WEEK_OFFSET = 360;
+    uint256 internal constant MAX_MONTH_OFFSET = 2160;
+    uint256 internal constant MAX_QUARTER_OFFSET = 7650;
+
+    // Offsets for each time chunk denominated in bits
+    uint256 internal constant WEEK_BIT_OFFSET = 90;
+    uint256 internal constant MONTH_BIT_OFFSET = 135;
+    uint256 internal constant QUARTER_BIT_OFFSET = 195;
+
+    // This is a constant that represents the time period that all rates are normalized by, 360 days
+    uint256 internal constant IMPLIED_RATE_TIME = 31104000;
+    // Number of decimal places that rates are stored in, equals 100%
+    int256 internal constant RATE_PRECISION = 1e9;
+    uint256 internal constant BASIS_POINT = uint256(RATE_PRECISION / 10000);
+
+    // This is the ABDK64x64 representation of RATE_PRECISION
+    // RATE_PRECISION_64x64 = ABDKMath64x64.fromUint(RATE_PRECISION)
+    int128 internal constant RATE_PRECISION_64x64 = 0x3b9aca000000000000000000;
+    int128 internal constant LOG_RATE_PRECISION_64x64 = 382276781265598821176;
+
+    uint256 internal constant FCASH_ASSET_TYPE = 1;
+    // Liquidity token asset types are 1 + marketIndex (where marketIndex is 1-indexed)
+    uint256 internal constant MIN_LIQUIDITY_TOKEN_INDEX = 2;
+    uint256 internal constant MAX_LIQUIDITY_TOKEN_INDEX = 8;
+
+    bytes1 internal constant BOOL_FALSE = 0x00;
+    bytes1 internal constant BOOL_TRUE = 0x01;
+
+    // Account context flags
+    bytes1 internal constant HAS_ASSET_DEBT = 0x01;
+    bytes1 internal constant HAS_CASH_DEBT = 0x02;
+    bytes2 internal constant ACTIVE_IN_PORTFOLIO = 0x8000;
+    bytes2 internal constant ACTIVE_IN_BALANCES = 0x4000;
+    bytes2 internal constant UNMASK_FLAGS = 0x3FFF;
+    uint16 internal constant MAX_CURRENCIES = uint16(UNMASK_FLAGS);
+
+    // nToken Parameters
+    int256 internal constant DEPOSIT_PERCENT_BASIS = 1e8;
+    uint8 internal constant LIQUIDATION_HAIRCUT_PERCENTAGE = 0;
+    uint8 internal constant CASH_WITHHOLDING_BUFFER = 1;
+    uint8 internal constant RESIDUAL_PURCHASE_TIME_BUFFER = 2;
+    uint8 internal constant PV_HAIRCUT_PERCENTAGE = 3;
+    uint8 internal constant RESIDUAL_PURCHASE_INCENTIVE = 4;
+    uint8 internal constant ASSET_ARRAY_LENGTH = 5;
+
+    // Liquidation parameters
+    /// @dev Default portion of collateral that a liquidator is allowed to liquidate, will be higher if the account
+    /// requires more collateral to be liquidated
+    int256 internal constant DEFAULT_LIQUIDATION_PORTION = 40;
+    /// @dev Percentage of local liquidity token cash claim delivered to the liquidator for liquidating liquidity tokens
+    int256 internal constant TOKEN_REPO_INCENTIVE_PERCENT = 10;
+    /// @dev Liquidation dust setting used during fCash liquidation
+    int256 internal constant LIQUIDATION_DUST = 10;
+
+    // Pause Router liquidation enabled states
+    bytes1 internal constant LOCAL_CURRENCY_ENABLED = 0x01;
+    bytes1 internal constant COLLATERAL_CURRENCY_ENABLED = 0x02;
+    bytes1 internal constant LOCAL_FCASH_ENABLED = 0x04;
+    bytes1 internal constant CROSS_CURRENCY_FCASH_ENABLED = 0x08;
+
+    /* Internal Storage Slot Offsets */
+    // Internally used storage slots are set at 1000000 offset from the solidity provisioned storage slots to minimize
+    // the possibility of clashing.
+    uint256 internal constant ACCOUNT_CONTEXT_STORAGE_OFFSET = 1000001;
+    uint256 internal constant NTOKEN_CONTEXT_STORAGE_OFFSET = 1000002;
+    uint256 internal constant NTOKEN_ADDRESS_STORAGE_OFFSET = 1000003;
+    uint256 internal constant NTOKEN_DEPOSIT_STORAGE_OFFSET = 1000004;
+    uint256 internal constant NTOKEN_INIT_STORAGE_OFFSET = 1000005;
+    uint256 internal constant BALANCE_STORAGE_OFFSET = 1000006;
+    uint256 internal constant TOKEN_STORAGE_OFFSET = 1000007;
+    uint256 internal constant SETTLEMENT_RATE_STORAGE_OFFSET = 1000008;
+    uint256 internal constant CASH_GROUP_STORAGE_OFFSET = 1000009;
+    uint256 internal constant MARKET_STORAGE_OFFSET = 1000010;
+    uint256 internal constant ASSETS_BITMAP_STORAGE_OFFSET = 1000011;
+    uint256 internal constant IFCASH_STORAGE_OFFSET = 1000012;
+    uint256 internal constant PORTFOLIO_ARRAY_STORAGE_OFFSET = 1000013;
+    uint256 internal constant NTOKEN_TOTAL_SUPPLY_OFFSET = 1000014;
+}
+
+
 /**
  * @dev Collection of functions related to the address type
  */
@@ -418,4 +544,1070 @@ abstract contract UUPSUpgradeable is ERC1967Upgrade {
      * ```
      */
     function _authorizeUpgrade(address newImplementation) internal virtual;
+}
+
+
+
+/// @notice Different types of internal tokens
+///  - UnderlyingToken: underlying asset for a cToken (except for Ether)
+///  - cToken: Compound interest bearing token
+///  - cETH: Special handling for cETH tokens
+///  - Ether: the one and only
+///  - NonMintable: tokens that do not have an underlying (therefore not cTokens)
+enum TokenType {UnderlyingToken, cToken, cETH, Ether, NonMintable}
+
+/// @notice Specifies the different trade action types in the system. Each trade action type is
+/// encoded in a tightly packed bytes32 object. Trade action type is the first big endian byte of the
+/// 32 byte trade action object. The schemas for each trade action type are defined below.
+enum TradeActionType {
+    // (uint8 TradeActionType, uint8 MarketIndex, uint88 fCashAmount, uint32 minImpliedRate, uint120 unused)
+    Lend,
+    // (uint8 TradeActionType, uint8 MarketIndex, uint88 fCashAmount, uint32 maxImpliedRate, uint128 unused)
+    Borrow,
+    // (uint8 TradeActionType, uint8 MarketIndex, uint88 assetCashAmount, uint32 minImpliedRate, uint32 maxImpliedRate, uint88 unused)
+    AddLiquidity,
+    // (uint8 TradeActionType, uint8 MarketIndex, uint88 tokenAmount, uint32 minImpliedRate, uint32 maxImpliedRate, uint88 unused)
+    RemoveLiquidity,
+    // (uint8 TradeActionType, uint32 Maturity, int88 fCashResidualAmount, uint128 unused)
+    PurchaseNTokenResidual,
+    // (uint8 TradeActionType, address CounterpartyAddress, int88 fCashAmountToSettle)
+    SettleCashDebt
+}
+
+/// @notice Specifies different deposit actions that can occur during BalanceAction or BalanceActionWithTrades
+enum DepositActionType {
+    // No deposit action
+    None,
+    // Deposit asset cash, depositActionAmount is specified in asset cash external precision
+    DepositAsset,
+    // Deposit underlying tokens that are mintable to asset cash, depositActionAmount is specified in underlying token
+    // external precision
+    DepositUnderlying,
+    // Deposits specified asset cash external precision amount into an nToken and mints the corresponding amount of
+    // nTokens into the account
+    DepositAssetAndMintNToken,
+    // Deposits specified underlying in external precision, mints asset cash, and uses that asset cash to mint nTokens
+    DepositUnderlyingAndMintNToken,
+    // Redeems an nToken balance to asset cash. depositActionAmount is specified in nToken precision. Considered a deposit action
+    // because it deposits asset cash into an account. If there are fCash residuals that cannot be sold off, will revert.
+    RedeemNToken,
+    // Converts specified amount of asset cash balance already in Notional to nTokens. depositActionAmount is specified in
+    // Notional internal 8 decimal precision.
+    ConvertCashToNToken
+}
+
+/// @notice Used internally for PortfolioHandler state
+enum AssetStorageState {NoChange, Update, Delete}
+
+/****** Calldata objects ******/
+
+/// @notice Defines a balance action for batchAction
+struct BalanceAction {
+    // Deposit action to take (if any)
+    DepositActionType actionType;
+    uint16 currencyId;
+    // Deposit action amount must correspond to the depositActionType, see documentation above.
+    uint256 depositActionAmount;
+    // Withdraw an amount of asset cash specified in Notional internal 8 decimal precision
+    uint256 withdrawAmountInternalPrecision;
+    // If set to true, will withdraw entire cash balance. Useful if there may be an unknown amount of asset cash
+    // residual left from trading.
+    bool withdrawEntireCashBalance;
+    // If set to true, will redeem asset cash to the underlying token on withdraw.
+    bool redeemToUnderlying;
+}
+
+/// @notice Defines a balance action with a set of trades to do as well
+struct BalanceActionWithTrades {
+    DepositActionType actionType;
+    uint16 currencyId;
+    uint256 depositActionAmount;
+    uint256 withdrawAmountInternalPrecision;
+    bool withdrawEntireCashBalance;
+    bool redeemToUnderlying;
+    // Array of tightly packed 32 byte objects that represent trades. See TradeActionType documentation
+    bytes32[] trades;
+}
+
+/****** In memory objects ******/
+/// @notice Internal object that represents settled cash balances
+struct SettleAmount {
+    uint256 currencyId;
+    int256 netCashChange;
+}
+
+/// @notice Internal object that represents a token
+struct Token {
+    address tokenAddress;
+    bool hasTransferFee;
+    int256 decimals;
+    TokenType tokenType;
+}
+
+/// @notice Internal object that represents an nToken portfolio
+struct nTokenPortfolio {
+    CashGroupParameters cashGroup;
+    PortfolioState portfolioState;
+    int256 totalSupply;
+    int256 cashBalance;
+    uint256 lastInitializedTime;
+    bytes6 parameters;
+    address tokenAddress;
+}
+
+/// @notice Internal object used during liquidation
+struct LiquidationFactors {
+    address account;
+    // Aggregate free collateral of the account denominated in ETH underlying, 8 decimal precision
+    int256 netETHValue;
+    // Amount of net local currency asset cash before haircuts and buffers available
+    int256 localAssetAvailable;
+    // Amount of net collateral currency asset cash before haircuts and buffers available
+    int256 collateralAssetAvailable;
+    // Haircut value of nToken holdings denominated in asset cash, will be local or collateral nTokens based
+    // on liquidation type
+    int256 nTokenHaircutAssetValue;
+    // nToken parameters for calculating liquidation amount
+    bytes6 nTokenParameters;
+    // ETH exchange rate from local currency to ETH
+    ETHRate localETHRate;
+    // ETH exchange rate from collateral currency to ETH
+    ETHRate collateralETHRate;
+    // Asset rate for the local currency, used in cross currency calculations to calculate local asset cash required
+    AssetRateParameters localAssetRate;
+    // Used during currency liquidations if the account has liquidity tokens
+    CashGroupParameters cashGroup;
+    // Used during currency liquidations if the account has liquidity tokens
+    MarketParameters[] markets;
+}
+
+/// @notice Internal asset array portfolio state
+struct PortfolioState {
+    // Array of currently stored assets
+    PortfolioAsset[] storedAssets;
+    // Array of new assets to add
+    PortfolioAsset[] newAssets;
+    uint256 lastNewAssetIndex;
+    // Holds the length of stored assets after accounting for deleted assets
+    uint256 storedAssetLength;
+}
+
+/// @notice In memory ETH exchange rate used during free collateral calculation.
+struct ETHRate {
+    // The decimals (i.e. 10^rateDecimalPlaces) of the exchange rate
+    int256 rateDecimals;
+    // The exchange rate from base to ETH (if rate invert is required it is already done)
+    int256 rate;
+    // Amount of buffer to apply to the exchange rate for negative balances.
+    int256 buffer;
+    // Amount of haircut to apply to the exchange rate for positive balances
+    int256 haircut;
+    // Liquidation discount for this currency
+    int256 liquidationDiscount;
+}
+
+/// @notice Internal object used to handle balance state during a transaction
+struct BalanceState {
+    uint256 currencyId;
+    // Cash balance stored in balance state at the beginning of the transaction
+    int256 storedCashBalance;
+    // nToken balance stored at the beginning of the transaction
+    int256 storedNTokenBalance;
+    // The net cash change as a result of asset settlement or trading
+    int256 netCashChange;
+    // Net asset transfers into or out of the account
+    int256 netAssetTransferInternalPrecision;
+    // Net token transfers into or out of the account
+    int256 netNTokenTransfer;
+    // Net token supply change from minting or redeeming
+    int256 netNTokenSupplyChange;
+    // The last time incentives were claimed for this currency
+    uint256 lastClaimTime;
+    // The last integral supply amount when tokens were claimed
+    uint256 lastClaimIntegralSupply;
+}
+
+/// @dev Asset rate used to convert between underlying cash and asset cash
+struct AssetRateParameters {
+    // Address of the asset rate oracle
+    address rateOracle;
+    // The exchange rate from base to quote (if invert is required it is already done)
+    int256 rate;
+    // The decimals of the underlying, the rate converts to the underlying decimals
+    int256 underlyingDecimals;
+}
+
+/// @dev Cash group when loaded into memory
+struct CashGroupParameters {
+    uint256 currencyId;
+    uint256 maxMarketIndex;
+    AssetRateParameters assetRate;
+    bytes32 data;
+}
+
+/// @dev A portfolio asset when loaded in memory
+struct PortfolioAsset {
+    // Asset currency id
+    uint256 currencyId;
+    uint256 maturity;
+    // Asset type, fCash or liquidity token.
+    uint256 assetType;
+    // fCash amount or liquidity token amount
+    int256 notional;
+    // Used for managing portfolio asset state
+    uint256 storageSlot;
+    // The state of the asset for when it is written to storage
+    AssetStorageState storageState;
+}
+
+/// @dev Market object as represented in memory
+struct MarketParameters {
+    bytes32 storageSlot;
+    uint256 maturity;
+    // Total amount of fCash available for purchase in the market.
+    int256 totalfCash;
+    // Total amount of cash available for purchase in the market.
+    int256 totalAssetCash;
+    // Total amount of liquidity tokens (representing a claim on liquidity) in the market.
+    int256 totalLiquidity;
+    // This is the implied rate that we use to smooth the anchor rate between trades.
+    uint256 lastImpliedRate;
+    // This is the oracle rate used to value fCash and prevent flash loan attacks
+    uint256 oracleRate;
+    // This is the timestamp of the previous trade
+    uint256 previousTradeTime;
+    // Used to determine if the market has been updated
+    bytes1 storageState;
+}
+
+/// @dev Simplified market object used during settlement
+struct SettlementMarket {
+    bytes32 storageSlot;
+    // Total amount of fCash available for purchase in the market.
+    int256 totalfCash;
+    // Total amount of cash available for purchase in the market.
+    int256 totalAssetCash;
+    // Total amount of liquidity tokens (representing a claim on liquidity) in the market.
+    int256 totalLiquidity;
+    // Un parsed market data used for storage
+    bytes32 data;
+}
+
+/// @dev Used during settling bitmap assets for calculating bitmap shifts
+struct SplitBitmap {
+    bytes32 dayBits;
+    bytes32 weekBits;
+    bytes32 monthBits;
+    bytes32 quarterBits;
+}
+
+/****** Storage objects ******/
+
+/// @dev Token object in storage
+struct TokenStorage {
+    // Address of the token
+    address tokenAddress;
+    // Transfer fees will change token deposit behavior
+    bool hasTransferFee;
+    TokenType tokenType;
+}
+
+/// @dev Exchange rate object as it is represented in storage, total storage is 25 bytes.
+struct ETHRateStorage {
+    // Address of the rate oracle
+    address rateOracle;
+    // The decimal places of precision that the rate oracle uses
+    uint8 rateDecimalPlaces;
+    // True of the exchange rate must be inverted
+    bool mustInvert;
+    // NOTE: both of these governance values are set with BUFFER_DECIMALS precision
+    // Amount of buffer to apply to the exchange rate for negative balances.
+    uint8 buffer;
+    // Amount of haircut to apply to the exchange rate for positive balances
+    uint8 haircut;
+    // Liquidation discount in percentage point terms, 106 means a 6% discount
+    uint8 liquidationDiscount;
+}
+
+/// @dev Asset rate object as it is represented in storage, total storage is 21 bytes.
+struct AssetRateStorage {
+    // Address of the rate oracle
+    address rateOracle;
+    // The decimal places of the underlying asset
+    uint8 underlyingDecimalPlaces;
+}
+
+/// @dev Governance parameters for a cash group, total storage is 9 bytes + 7 bytes for liquidity token haircuts
+/// and 7 bytes for rate scalars, total of 23 bytes. Note that this is stored packed in the storage slot so there
+/// are no indexes stored for liquidityTokenHaircuts or rateScalars, maxMarketIndex is used instead to determine the
+/// length.
+struct CashGroupSettings {
+    // Index of the AMMs on chain that will be made available. Idiosyncratic fCash
+    // that is dated less than the longest AMM will be tradable.
+    uint8 maxMarketIndex;
+    // Time window in minutes that the rate oracle will be averaged over
+    uint8 rateOracleTimeWindowMin;
+    // Total fees per trade, specified in BPS
+    uint8 totalFeeBPS;
+    // Share of the fees given to the protocol, denominated in percentage
+    uint8 reserveFeeShare;
+    // Debt buffer specified in 5 BPS increments
+    uint8 debtBuffer5BPS;
+    // fCash haircut specified in 5 BPS increments
+    uint8 fCashHaircut5BPS;
+    // If an account has a negative cash balance, it can be settled by incurring debt at the 3 month market. This
+    // is the basis points for the penalty rate that will be added the current 3 month oracle rate.
+    uint8 settlementPenaltyRate5BPS;
+    // If an account has fCash that is being liquidated, this is the discount that the liquidator can purchase it for
+    uint8 liquidationfCashHaircut5BPS;
+    // If an account has fCash that is being liquidated, this is the discount that the liquidator can purchase it for
+    uint8 liquidationDebtBuffer5BPS;
+    // Liquidity token haircut applied to cash claims, specified as a percentage between 0 and 100
+    uint8[] liquidityTokenHaircuts;
+    // Rate scalar used to determine the slippage of the market
+    uint8[] rateScalars;
+}
+
+/// @dev Holds account level context information used to determine settlement and
+/// free collateral actions. Total storage is 28 bytes
+struct AccountContext {
+    // Used to check when settlement must be triggered on an account
+    uint40 nextSettleTime;
+    // For lenders that never incur debt, we use this flag to skip the free collateral check.
+    bytes1 hasDebt;
+    // Length of the account's asset array
+    uint8 assetArrayLength;
+    // If this account has bitmaps set, this is the corresponding currency id
+    uint16 bitmapCurrencyId;
+    // 9 total active currencies possible (2 bytes each)
+    bytes18 activeCurrencies;
+}
+
+/// @dev Used in view methods to return account balances in a developer friendly manner
+struct AccountBalance {
+    uint256 currencyId;
+    int256 cashBalance;
+    int256 nTokenBalance;
+    uint256 lastClaimTime;
+    uint256 lastClaimIntegralSupply;
+}
+
+/**
+ * @notice Storage layout for the system. Do not change this file once deployed, future storage
+ * layouts must inherit this and increment the version number.
+ */
+contract StorageLayoutV1 {
+    uint16 internal maxCurrencyId;
+
+    // Returns the exchange rate between an underlying currency and ETH for free
+    // collateral purposes. Mapping is from currency id to rate storage object.
+    mapping(uint256 => ETHRateStorage) internal underlyingToETHRateMapping;
+    // Returns the exchange rate between an underlying currency and asset for trading
+    // and free collateral. Mapping is from currency id to rate storage object.
+    mapping(uint256 => AssetRateStorage) internal assetToUnderlyingRateMapping;
+
+    /* Authentication Mappings */
+    // This is set to the timelock contract to execute governance functions
+    address public owner;
+    // This is set to the governance token address
+    address internal token;
+    // This is set to an address of a router that can only call governance actions
+    address public pauseRouter;
+    // This is set to an address of a router that can only call governance actions
+    address public pauseGuardian;
+    // On upgrades this is set in the case that the pause router is used to pass the rollback check
+    address internal rollbackRouterImplementation;
+    // Sets the state of liquidations being enabled during a paused state. Each of the four lower
+    // bits can be turned on to represent one of the liquidation types being enabled.
+    bytes1 internal liquidationEnabledState;
+
+    // A blanket allowance for a spender to transfer any of an account's nTokens. This would allow a user
+    // to set an allowance on all nTokens for a particular integrating contract system.
+    // owner => spender => transferAllowance
+    mapping(address => mapping(address => uint256)) internal nTokenWhitelist;
+    // Individual transfer allowances for nTokens used for ERC20
+    // owner => spender => currencyId => transferAllowance
+    mapping(address => mapping(address => mapping(uint16 => uint256))) internal nTokenAllowance;
+
+    // Transfer operators
+    mapping(address => bool) internal globalTransferOperator;
+    mapping(address => mapping(address => bool)) internal accountAuthorizedTransferOperator;
+    mapping(address => bool) internal authorizedCallbackContract;
+
+    // Reverse mapping from token addresses to currency ids, only used for referencing in views
+    // and checking for duplicate token listings.
+    mapping(address => uint16) internal tokenAddressToCurrencyId;
+}
+
+
+/**
+ * @dev Interface of the ERC165 standard, as defined in the
+ * https://eips.ethereum.org/EIPS/eip-165[EIP].
+ *
+ * Implementers can declare support of contract interfaces, which can then be
+ * queried by others ({ERC165Checker}).
+ *
+ * For an implementation, see {ERC165}.
+ */
+interface IERC165 {
+    /**
+     * @dev Returns true if this contract implements the interface defined by
+     * `interfaceId`. See the corresponding
+     * https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section]
+     * to learn more about how these ids are created.
+     *
+     * This function call must use less than 30 000 gas.
+     */
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
+}
+
+
+
+interface nTokenERC20 {
+    event Transfer(address indexed from, address indexed to, uint256 amount);
+
+    event Approval(address indexed owner, address indexed spender, uint256 amount);
+
+    function nTokenTotalSupply(address nTokenAddress) external view returns (uint256);
+
+    function nTokenTransferAllowance(
+        uint16 currencyId,
+        address owner,
+        address spender
+    ) external view returns (uint256);
+
+    function nTokenBalanceOf(uint16 currencyId, address account) external view returns (uint256);
+
+    function nTokenTransferApprove(
+        uint16 currencyId,
+        address owner,
+        address spender,
+        uint256 amount
+    ) external returns (bool);
+
+    function nTokenTransfer(
+        uint16 currencyId,
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (bool);
+
+    function nTokenTransferFrom(
+        uint16 currencyId,
+        address spender,
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (bool, uint256);
+
+    function nTokenTransferApproveAll(address spender, uint256 amount) external returns (bool);
+
+    function nTokenClaimIncentives() external returns (uint256);
+
+    function nTokenPresentValueAssetDenominated(uint16 currencyId) external view returns (int256);
+
+    function nTokenPresentValueUnderlyingDenominated(uint16 currencyId)
+        external
+        view
+        returns (int256);
+}
+
+
+interface nERC1155Interface is IERC165 {
+    event TransferSingle(
+        address indexed operator,
+        address indexed from,
+        address indexed to,
+        uint256 id,
+        uint256 value
+    );
+    event TransferBatch(
+        address indexed operator,
+        address indexed from,
+        address indexed to,
+        uint256[] ids,
+        uint256[] values
+    );
+    event ApprovalForAll(address indexed account, address indexed operator, bool approved);
+    event URI(string value, uint256 indexed id);
+
+    /// @dev Return value is overridden to be int256 here
+    function balanceOf(address account, uint256 id) external view returns (int256);
+
+    /// @dev Return value is overridden to be int256 here
+    function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids)
+        external
+        view
+        returns (int256[] memory);
+
+    function setApprovalForAll(address operator, bool approved) external;
+
+    function isApprovedForAll(address account, address operator) external view returns (bool);
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes calldata data
+    ) external payable;
+
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) external;
+
+    function decodeToAssets(uint256[] calldata ids, uint256[] calldata amounts)
+        external
+        view
+        returns (PortfolioAsset[] memory);
+
+    function encodeToId(
+        uint16 currencyId,
+        uint40 maturity,
+        uint8 assetType
+    ) external pure returns (uint256 id);
+}
+
+
+interface NotionalGovernance {
+    event ListCurrency(uint16 newCurrencyId);
+    event UpdateETHRate(uint16 currencyId);
+    event UpdateAssetRate(uint16 currencyId);
+    event UpdateCashGroup(uint16 currencyId);
+    event DeployNToken(uint16 currencyId, address nTokenAddress);
+    event UpdateDepositParameters(uint16 currencyId);
+    event UpdateInitializationParameters(uint16 currencyId);
+    event UpdateIncentiveEmissionRate(uint16 currencyId, uint32 newEmissionRate);
+    event UpdateTokenCollateralParameters(uint16 currencyId);
+    event UpdateGlobalTransferOperator(address operator, bool approved);
+    event UpdateAuthorizedCallbackContract(address operator, bool approved);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event PauseRouterAndGuardianUpdated(address indexed pauseRouter, address indexed pauseGuardian);
+
+    function transferOwnership(address newOwner) external;
+
+    function setPauseRouterAndGuardian(address pauseRouter_, address pauseGuardian_) external;
+
+    function listCurrency(
+        TokenStorage calldata assetToken,
+        TokenStorage calldata underlyingToken,
+        address rateOracle,
+        bool mustInvert,
+        uint8 buffer,
+        uint8 haircut,
+        uint8 liquidationDiscount
+    ) external;
+
+    function enableCashGroup(
+        uint16 currencyId,
+        address assetRateOracle,
+        CashGroupSettings calldata cashGroup,
+        string calldata underlyingName,
+        string calldata underlyingSymbol
+    ) external;
+
+    function updateDepositParameters(
+        uint16 currencyId,
+        uint32[] calldata depositShares,
+        uint32[] calldata leverageThresholds
+    ) external;
+
+    function updateInitializationParameters(
+        uint16 currencyId,
+        uint32[] calldata annualizedAnchorRates,
+        uint32[] calldata proportions
+    ) external;
+
+    function updateIncentiveEmissionRate(uint16 currencyId, uint32 newEmissionRate) external;
+
+    function updateTokenCollateralParameters(
+        uint16 currencyId,
+        uint8 residualPurchaseIncentive10BPS,
+        uint8 pvHaircutPercentage,
+        uint8 residualPurchaseTimeBufferHours,
+        uint8 cashWithholdingBuffer10BPS,
+        uint8 liquidationHaircutPercentage
+    ) external;
+
+    function updateCashGroup(uint16 currencyId, CashGroupSettings calldata cashGroup) external;
+
+    function updateAssetRate(uint16 currencyId, address rateOracle) external;
+
+    function updateETHRate(
+        uint16 currencyId,
+        address rateOracle,
+        bool mustInvert,
+        uint8 buffer,
+        uint8 haircut,
+        uint8 liquidationDiscount
+    ) external;
+
+    function updateGlobalTransferOperator(address operator, bool approved) external;
+
+    function updateAuthorizedCallbackContract(address operator, bool approved) external;
+}
+
+
+interface NotionalViews {
+    function getMaxCurrencyId() external view returns (uint16);
+
+    function getCurrencyId(address tokenAddress) external view returns (uint16 currencyId);
+
+    function getCurrency(uint16 currencyId)
+        external
+        view
+        returns (Token memory assetToken, Token memory underlyingToken);
+
+    function getRateStorage(uint16 currencyId)
+        external
+        view
+        returns (ETHRateStorage memory ethRate, AssetRateStorage memory assetRate);
+
+    function getCurrencyAndRates(uint16 currencyId)
+        external
+        view
+        returns (
+            Token memory assetToken,
+            Token memory underlyingToken,
+            ETHRate memory ethRate,
+            AssetRateParameters memory assetRate
+        );
+
+    function getCashGroup(uint16 currencyId) external view returns (CashGroupSettings memory);
+
+    function getCashGroupAndAssetRate(uint16 currencyId)
+        external
+        view
+        returns (CashGroupSettings memory cashGroup, AssetRateParameters memory assetRate);
+
+    function getInitializationParameters(uint16 currencyId)
+        external
+        view
+        returns (int256[] memory annualizedAnchorRates, int256[] memory proportions);
+
+    function getDepositParameters(uint16 currencyId)
+        external
+        view
+        returns (int256[] memory depositShares, int256[] memory leverageThresholds);
+
+    function nTokenAddress(uint16 currencyId) external view returns (address);
+
+    function getOwner() external view returns (address);
+
+    function getSettlementRate(uint16 currencyId, uint40 maturity)
+        external
+        view
+        returns (AssetRateParameters memory);
+
+    function getActiveMarkets(uint16 currencyId) external view returns (MarketParameters[] memory);
+
+    function getActiveMarketsAtBlockTime(uint16 currencyId, uint32 blockTime)
+        external
+        view
+        returns (MarketParameters[] memory);
+
+    function getReserveBalance(uint16 currencyId) external view returns (int256 reserveBalance);
+
+    function getNTokenPortfolio(address tokenAddress)
+        external
+        view
+        returns (PortfolioAsset[] memory liquidityTokens, PortfolioAsset[] memory netfCashAssets);
+
+    function getNTokenAccount(address tokenAddress)
+        external
+        view
+        returns (
+            uint256 currencyId,
+            uint256 totalSupply,
+            uint256 incentiveAnnualEmissionRate,
+            uint256 lastInitializedTime,
+            bytes6 nTokenParameters,
+            int256 cashBalance,
+            uint256 integralTotalSupply,
+            uint256 lastSupplyChangeTime
+        );
+
+    function getAccount(address account)
+        external
+        view
+        returns (
+            AccountContext memory accountContext,
+            AccountBalance[] memory accountBalances,
+            PortfolioAsset[] memory portfolio
+        );
+
+    function getAccountContext(address account) external view returns (AccountContext memory);
+
+    function getAccountBalance(uint16 currencyId, address account)
+        external
+        view
+        returns (
+            int256 cashBalance,
+            int256 nTokenBalance,
+            uint256 lastClaimTime
+        );
+
+    function getAccountPortfolio(address account) external view returns (PortfolioAsset[] memory);
+
+    function getfCashNotional(
+        address account,
+        uint256 currencyId,
+        uint256 maturity
+    ) external view returns (int256);
+
+    function getAssetsBitmap(address account, uint256 currencyId) external view returns (bytes32);
+
+    function getFreeCollateral(address account) external view returns (int256, int256[] memory);
+
+    function calculateNTokensToMint(uint16 currencyId, uint88 amountToDepositExternalPrecision)
+        external
+        view
+        returns (uint256);
+
+    function getfCashAmountGivenCashAmount(
+        uint16 currencyId,
+        int88 netCashToAccount,
+        uint256 marketIndex,
+        uint256 blockTime
+    ) external view returns (int256);
+
+    function getCashAmountGivenfCashAmount(
+        uint16 currencyId,
+        int88 fCashAmount,
+        uint256 marketIndex,
+        uint256 blockTime
+    ) external view returns (int256, int256);
+
+    function nTokenGetClaimableIncentives(address account, uint256 blockTime)
+        external
+        view
+        returns (uint256);
+
+}
+
+
+interface NotionalProxy is nTokenERC20, nERC1155Interface, NotionalGovernance, NotionalViews {
+    /** User trading events */
+    event CashBalanceChange(address indexed account, uint16 currencyId, int256 netCashChange);
+    event nTokenSupplyChange(address indexed account, uint16 currencyId, int256 tokenSupplyChange);
+    event MarketsInitialized(uint16 currencyId);
+    event SweepCashIntoMarkets(uint16 currencyId, int256 cashIntoMarkets);
+    event SettledCashDebt(
+        address settledAccount,
+        uint16 currencyId,
+        int256 amountToSettleAsset,
+        int256 fCashAmount
+    );
+    event nTokenResidualPurchase(
+        uint16 currencyId,
+        uint40 maturity,
+        int256 fCashAmountToPurchase,
+        int256 netAssetCashNToken
+    );
+    event LendBorrowTrade(
+        address account,
+        uint16 currencyId,
+        uint40 maturity,
+        int256 netAssetCash,
+        int256 netfCash,
+        int256 netFee
+    );
+    event AddRemoveLiquidity(
+        address account,
+        uint16 currencyId,
+        uint40 maturity,
+        int256 netAssetCash,
+        int256 netfCash,
+        int256 netLiquidityTokens
+    );
+
+    /// @notice Emitted whenever an account context has updated
+    event AccountContextUpdate(address indexed account);
+    /// @notice Emitted when an account has assets that are settled
+    event AccountSettled(address indexed account);
+    /// @notice Emitted when an asset rate is settled
+    event SetSettlementRate(uint256 currencyId, uint256 maturity, uint128 rate);
+
+    /* Liquidation Events */
+    event LiquidateLocalCurrency(
+        address indexed liquidated,
+        address indexed liquidator,
+        uint16 localCurrencyId,
+        int256 netLocalFromLiquidator
+    );
+
+    event LiquidateCollateralCurrency(
+        address indexed liquidated,
+        address indexed liquidator,
+        uint16 localCurrencyId,
+        uint16 collateralCurrencyId,
+        int256 netLocalFromLiquidator,
+        int256 netCollateralTransfer,
+        int256 netNTokenTransfer
+    );
+
+    event LiquidatefCashEvent(
+        address indexed liquidated,
+        uint16 localCurrencyId,
+        uint16 fCashCurrency,
+        int256 netLocalFromLiquidator,
+        uint256[] fCashMaturities,
+        int256[] fCashNotionalTransfer
+    );
+
+    /** UUPS Upgradeable contract calls */
+    function upgradeTo(address newImplementation) external;
+    function upgradeToAndCall(address newImplementation, bytes memory data) external payable;
+    function getImplementation() external view returns (address);
+    function owner() external view returns (address);
+    function pauseRouter() external view returns (address);
+    function pauseGuardian() external view returns (address);
+
+    /** Initialize Markets Action */
+    function initializeMarkets(uint256 currencyId, bool isFirstInit) external;
+
+    function sweepCashIntoMarkets(uint16 currencyId) external;
+
+    /** Redeem nToken Action */
+    function nTokenRedeem(
+        address redeemer,
+        uint16 currencyId,
+        uint96 tokensToRedeem_,
+        bool sellTokenAssets
+    ) external returns (int256);
+
+    /** Account Action */
+    function enableBitmapCurrency(uint16 currencyId) external;
+
+    function settleAccount(address account) external;
+
+    function depositUnderlyingToken(
+        address account,
+        uint16 currencyId,
+        uint256 amountExternalPrecision
+    ) external payable returns (uint256);
+
+    function depositAssetToken(
+        address account,
+        uint16 currencyId,
+        uint256 amountExternalPrecision
+    ) external returns (uint256);
+
+    function withdraw(
+        uint16 currencyId,
+        uint88 amountInternalPrecision,
+        bool redeemToUnderlying
+    ) external returns (uint256);
+
+    /** Batch Action */
+    function batchBalanceAction(address account, BalanceAction[] calldata actions) external payable;
+
+    function batchBalanceAndTradeAction(address account, BalanceActionWithTrades[] calldata actions)
+        external
+        payable;
+
+    function batchBalanceAndTradeActionWithCallback(
+        address account,
+        BalanceActionWithTrades[] calldata actions,
+        bytes calldata callbackData
+    ) external payable;
+
+    /** Liquidation Action */
+    function calculateLocalCurrencyLiquidation(
+        address liquidateAccount,
+        uint256 localCurrency,
+        uint96 maxNTokenLiquidation
+    ) external returns (int256, int256);
+
+    function liquidateLocalCurrency(
+        address liquidateAccount,
+        uint256 localCurrency,
+        uint96 maxNTokenLiquidation
+    ) external returns (int256, int256);
+
+    function calculateCollateralCurrencyLiquidation(
+        address liquidateAccount,
+        uint256 localCurrency,
+        uint256 collateralCurrency,
+        uint128 maxCollateralLiquidation,
+        uint96 maxNTokenLiquidation
+    )
+        external
+        returns (
+            int256,
+            int256,
+            int256
+        );
+
+    function liquidateCollateralCurrency(
+        address liquidateAccount,
+        uint256 localCurrency,
+        uint256 collateralCurrency,
+        uint128 maxCollateralLiquidation,
+        uint96 maxNTokenLiquidation,
+        bool withdrawCollateral,
+        bool redeemToUnderlying
+    )
+        external
+        returns (
+            int256,
+            int256,
+            int256
+        );
+
+    function calculatefCashLocalLiquidation(
+        address liquidateAccount,
+        uint256 localCurrency,
+        uint256[] calldata fCashMaturities,
+        uint256[] calldata maxfCashLiquidateAmounts
+    ) external returns (int256[] memory, int256);
+
+    function liquidatefCashLocal(
+        address liquidateAccount,
+        uint256 localCurrency,
+        uint256[] calldata fCashMaturities,
+        uint256[] calldata maxfCashLiquidateAmounts
+    ) external returns (int256[] memory, int256);
+
+    function calculatefCashCrossCurrencyLiquidation(
+        address liquidateAccount,
+        uint256 localCurrency,
+        uint256 fCashCurrency,
+        uint256[] calldata fCashMaturities,
+        uint256[] calldata maxfCashLiquidateAmounts
+    ) external returns (int256[] memory, int256);
+
+    function liquidatefCashCrossCurrency(
+        address liquidateAccount,
+        uint256 localCurrency,
+        uint256 fCashCurrency,
+        uint256[] calldata fCashMaturities,
+        uint256[] calldata maxfCashLiquidateAmounts
+    ) external returns (int256[] memory, int256);
+}
+
+
+/**
+ * Read only version of the Router that can only be upgraded by governance. Used in emergency when the system must
+ * be paused for some reason.
+ */
+contract PauseRouter is StorageLayoutV1, UUPSUpgradeable {
+    address public immutable VIEWS;
+    address public immutable LIQUIDATE_CURRENCY;
+    address public immutable LIQUIDATE_FCASH;
+
+    constructor(
+        address views_,
+        address liquidateCurrency_,
+        address liquidatefCash_
+    ) {
+        VIEWS = views_;
+        LIQUIDATE_CURRENCY = liquidateCurrency_;
+        LIQUIDATE_FCASH = liquidatefCash_;
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override {
+        // This is only true during a rollback check when the pause router is downgraded
+        bool isRollbackCheck = rollbackRouterImplementation != address(0) &&
+            newImplementation == rollbackRouterImplementation;
+
+        require(
+            owner == msg.sender || (msg.sender == pauseGuardian && isRollbackCheck),
+            "Unauthorized upgrade"
+        );
+
+        // Clear this storage slot so the guardian cannot upgrade back to the previous router,
+        // requires governance to do so.
+        rollbackRouterImplementation = address(0);
+    }
+
+    function getLiquidationEnabledState() external view returns (bytes1) {
+        return liquidationEnabledState;
+    }
+
+    function setLiquidationEnabledState(bytes1 liquidationEnabledState_) external {
+        // Only authorized addresses can set the liquidation state
+        require(owner == msg.sender || msg.sender == pauseGuardian);
+        liquidationEnabledState = liquidationEnabledState_;
+    }
+
+    function isEnabled(bytes1 state) private view returns (bool) {
+        return (liquidationEnabledState & state == state);
+    }
+
+    function getRouterImplementation(bytes4 sig) public view returns (address) {
+        // Liquidation calculation methods are stateful (they settle accounts if required)
+        // and therefore we prevent them from being called unless specifically authorized.
+        if (
+            (sig == NotionalProxy.calculateCollateralCurrencyLiquidation.selector ||
+                sig == NotionalProxy.liquidateCollateralCurrency.selector) &&
+            isEnabled(Constants.COLLATERAL_CURRENCY_ENABLED)
+        ) {
+            return LIQUIDATE_CURRENCY;
+        }
+
+        if (
+            (sig == NotionalProxy.calculateLocalCurrencyLiquidation.selector ||
+                sig == NotionalProxy.liquidateLocalCurrency.selector) &&
+            isEnabled(Constants.LOCAL_CURRENCY_ENABLED)
+        ) {
+            return LIQUIDATE_CURRENCY;
+        }
+
+        if (
+            (sig == NotionalProxy.liquidatefCashLocal.selector ||
+                sig == NotionalProxy.calculatefCashLocalLiquidation.selector) &&
+            isEnabled(Constants.LOCAL_FCASH_ENABLED)
+        ) {
+            return LIQUIDATE_FCASH;
+        }
+
+        if (
+            (sig == NotionalProxy.liquidatefCashCrossCurrency.selector ||
+                sig == NotionalProxy.calculatefCashCrossCurrencyLiquidation.selector) &&
+            isEnabled(Constants.CROSS_CURRENCY_FCASH_ENABLED)
+        ) {
+            return LIQUIDATE_FCASH;
+        }
+
+        // If not found then delegate to views. This will revert if there is no method on
+        // the view contract
+        return VIEWS;
+    }
+
+    /// @dev Delegates the current call to `implementation`.
+    /// This function does not return to its internal call site, it will return directly to the external caller.
+    function _delegate(address implementation) private {
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            // Copy msg.data. We take full control of memory in this inline assembly
+            // block because it will not return to Solidity code. We overwrite the
+            // Solidity scratch pad at memory position 0.
+            calldatacopy(0, 0, calldatasize())
+
+            // Call the implementation.
+            // out and outsize are 0 because we don't know the size yet.
+            let result := delegatecall(gas(), implementation, 0, calldatasize(), 0, 0)
+
+            // Copy the returned data.
+            returndatacopy(0, 0, returndatasize())
+
+            switch result
+            // delegatecall returns 0 on error.
+            case 0 {
+                revert(0, returndatasize())
+            }
+            default {
+                return(0, returndatasize())
+            }
+        }
+    }
+
+    fallback() external payable {
+        _delegate(getRouterImplementation(msg.sig));
+    }
 }

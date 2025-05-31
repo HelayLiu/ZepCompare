@@ -1,4 +1,6 @@
 # ZepCompare
+This repository is the artifact of the paper "Demystifying OpenZeppelin's Own Vulnerabilities and Analyzing Their Propagation in Smart Contracts".
+
 The code of ZepCompare are in `code`, and the groundtruth dataset is in `datasets/groundtruth`, the addresses of the large scale experiment are in `datasets/large_size`
 
 To run ZepCompare:
@@ -7,6 +9,4 @@ To run ZepCompare:
 
 ` pip install -r requirement.txt `
 
-2. run fact_extraction/extract_main.py
-
-3. run voliation_detection/detection_main.py
+2. run voliation_detection/detection_main.py

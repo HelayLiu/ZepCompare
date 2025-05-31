@@ -137,7 +137,7 @@ def get_max_version(versions):
     return sorted_versions[0] if len(sorted_versions) > 0 else '0.8.0'
 if __name__=='__main__':
     
-    with open(os.path.join(inter_path,'res4.pkl'),'rb') as f:
+    with open(os.path.join(inter_path,'facts.pkl'),'rb') as f:
         facts_dic=pickle.load(f)
 
         ## signature based
